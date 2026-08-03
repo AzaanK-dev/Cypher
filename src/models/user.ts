@@ -5,7 +5,7 @@ export interface Message extends Document {
     content: string;
     createdAt: Date
 }
-const messageSchema: Schema<Message> = Schema.create({
+const messageSchema: Schema<Message> = new Schema({
     content: {
         type: String,
         required: true
