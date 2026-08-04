@@ -14,10 +14,10 @@ export async function sendVerificationEmail(
             subject: 'Cypher | Verification Code',
             react: VerificationEmail({username, otp: verifyCode}),
         });
-        return { success: false, message: "Failed to send verification mail" }
+        return { success: true, message: "Verification code send successfully" }
         
     } catch (err) {
         console.log("Error sending Verification Email: ", err);
-        return { success: false, message: "Failed to send verification mail" }
+        return { success: false, message: "Failed to send verification code" }
     }
 }
