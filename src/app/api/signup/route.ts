@@ -1,3 +1,4 @@
+import { sendVerificationEmail } from "@/helpers/sendVerificationEmail"
 import { dbConnect } from "@/lib/dbConnect"
 import UserModel from "@/models/user"
 import bcrypt from "bcryptjs"
@@ -20,7 +21,19 @@ export async function POST(request: Request) {
         const verifyCode = Math.floor(100000+Math.random()*900000).toString()
 
         if (userByMail) {
-            true
+            if(userByMail.isVerified){
+                return Response.json(
+                    { success: false, message: "Failed to signup user" },
+                    { status: 500 }
+                )
+            }else{
+                const hashedPassword = await bcrypt.hash(password, 10)
+                userByMail.password = hashedPassword;
+                userByMail.verifyCode = verifyCode;
+                userByMail.verifyCodeExpiry = new Date(Date.now()+3600000)
+
+                await userByMail.save()
+            }
         } else {
             const hashedPassword = await bcrypt.hash(password, 10)
             const expiryDate = new Date()
@@ -35,9 +48,21 @@ export async function POST(request: Request) {
                 isAcceptingMessage: true,
                 messages: []
             })
-
             user.save()
         }
+
+        const emailResponse = await sendVerificationEmail(email,username,verifyCode);
+        if(!emailResponse.success){
+            return Response.json(
+                { success: false, message: emailResponse.message },
+                { status: 201 }
+            )
+        }
+
+        return Response.json(
+            { success: true, message: "User signup confirmed. Verify your email" },
+            { status: 201 }
+        )
 
     } catch (err) {
         console.error("Error during user signup", err)
